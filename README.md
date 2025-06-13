@@ -25,6 +25,7 @@ A comprehensive platform for analyzing Tesla stock data, featuring real-time pri
   - Garman-Klass Volatility
 - Market regime detection
 - Correlation analysis
+- Machine Learning price predictions
 - SQLite database for historical data storage
 - Modern, responsive web interface
 - RESTful API for data access
@@ -38,6 +39,7 @@ A comprehensive platform for analyzing Tesla stock data, featuring real-time pri
 - SQLAlchemy (Database ORM)
 - SciPy (Statistical analysis)
 - scikit-learn (Machine learning)
+- TensorFlow (Deep learning)
 
 ### Frontend
 - React.js
@@ -46,7 +48,7 @@ A comprehensive platform for analyzing Tesla stock data, featuring real-time pri
 - Recharts (Charting library)
 - Axios (HTTP client)
 
-## Setup
+## Local Development Setup
 
 ### Backend Setup
 
@@ -89,104 +91,49 @@ npm run dev
 
 The web interface will be available at `http://localhost:3000`
 
-## Deployment
+## Free Deployment Guide
 
-### Backend Deployment (AWS)
+### Backend Deployment (Render.com)
 
-1. Create an EC2 instance:
-```bash
-aws ec2 run-instances \
-    --image-id ami-0c55b159cbfafe1f0 \
-    --instance-type t2.micro \
-    --key-name your-key-pair \
-    --security-group-ids sg-xxxxxxxx
-```
+1. Create a Render account at https://render.com (free tier)
 
-2. Install dependencies on EC2:
-```bash
-sudo apt-get update
-sudo apt-get install python3-pip python3-venv nginx
-```
+2. Create a new Web Service:
+   - Connect your GitHub repository
+   - Select the repository
+   - Configure the service:
+     - Name: tesla-analysis-backend
+     - Environment: Python
+     - Build Command: `pip install -r backend/requirements.txt`
+     - Start Command: `cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+     - Plan: Free
 
-3. Set up the application:
-```bash
-git clone <repository-url>
-cd tesla_montecarlo
-python3 -m venv venv
-source venv/bin/activate
-pip install -r backend/requirements.txt
-```
+3. Add Environment Variables:
+   - `PYTHON_VERSION`: 3.9.0
+   - `PORT`: 8000
 
-4. Configure Nginx:
-```bash
-sudo nano /etc/nginx/sites-available/tesla-analysis
-```
-
-Add the following configuration:
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://localhost:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-```
-
-5. Enable the site and restart Nginx:
-```bash
-sudo ln -s /etc/nginx/sites-available/tesla-analysis /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-6. Set up systemd service:
-```bash
-sudo nano /etc/systemd/system/tesla-analysis.service
-```
-
-Add the following configuration:
-```ini
-[Unit]
-Description=Tesla Stock Analysis API
-After=network.target
-
-[Service]
-User=ubuntu
-WorkingDirectory=/home/ubuntu/tesla_montecarlo
-Environment="PATH=/home/ubuntu/tesla_montecarlo/venv/bin"
-ExecStart=/home/ubuntu/tesla_montecarlo/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
-
-[Install]
-WantedBy=multi-user.target
-```
-
-7. Start the service:
-```bash
-sudo systemctl start tesla-analysis
-sudo systemctl enable tesla-analysis
-```
+4. Deploy the service
 
 ### Frontend Deployment (Vercel)
 
-1. Install Vercel CLI:
+1. Create a Vercel account at https://vercel.com (free tier)
+
+2. Install Vercel CLI:
 ```bash
 npm install -g vercel
 ```
 
-2. Deploy to Vercel:
+3. Deploy to Vercel:
 ```bash
 cd frontend
 vercel
 ```
 
-3. Configure environment variables in Vercel dashboard:
-```
-NEXT_PUBLIC_API_URL=https://your-backend-domain.com
-```
+4. Configure environment variables in Vercel dashboard:
+   - `NEXT_PUBLIC_API_URL`: Your Render.com backend URL
+
+### Database Setup
+
+The project uses SQLite, which is file-based and doesn't require a separate database service. The database file will be automatically created in the backend directory.
 
 ## API Endpoints
 
@@ -198,6 +145,26 @@ NEXT_PUBLIC_API_URL=https://your-backend-domain.com
 - `GET /api/stock/volatility-metrics` - Get volatility metrics
 - `GET /api/stock/market-regime` - Get market regime analysis
 - `GET /api/stock/historical-analysis` - Get complete historical analysis
+- `POST /api/stock/ml/train` - Train machine learning models
+- `GET /api/stock/ml/predictions` - Get ML price predictions
+- `GET /api/stock/analysis/combined` - Get combined analysis
+
+## Free Tier Limitations
+
+### Render.com Free Tier
+- 750 hours of runtime per month
+- Automatic sleep after 15 minutes of inactivity
+- 512 MB RAM
+- Shared CPU
+- 1 GB disk space
+
+### Vercel Free Tier
+- Unlimited static sites
+- Serverless functions
+- Automatic HTTPS
+- Continuous deployment
+- Custom domains
+- 100 GB bandwidth per month
 
 ## Contributing
 

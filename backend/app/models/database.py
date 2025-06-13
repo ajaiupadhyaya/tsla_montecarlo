@@ -1,13 +1,14 @@
-from sqlalchemy import create_engine, Column, Integer, Float, String, DateTime, ForeignKey, JSON
+from sqlalchemy import create_engine, Column, Integer, Float, String, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
+from app.config import DATABASE_URL
 
 Base = declarative_base()
 
-class StockData(Base):
-    __tablename__ = 'stock_data'
-    
+class StockPrice(Base):
+    __tablename__ = "stock_prices"
+
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, nullable=False)
     open = Column(Float, nullable=False)
@@ -17,40 +18,23 @@ class StockData(Base):
     volume = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-class TechnicalIndicators(Base):
-    __tablename__ = 'technical_indicators'
-    
+class TechnicalIndicator(Base):
+    __tablename__ = "technical_indicators"
+
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, nullable=False)
     rsi = Column(Float)
     macd = Column(Float)
     macd_signal = Column(Float)
-    macd_histogram = Column(Float)
-    bb_upper = Column(Float)
-    bb_middle = Column(Float)
-    bb_lower = Column(Float)
+    macd_hist = Column(Float)
+    bollinger_upper = Column(Float)
+    bollinger_middle = Column(Float)
+    bollinger_lower = Column(Float)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-class StatisticalMetrics(Base):
-    __tablename__ = 'statistical_metrics'
-    
-    id = Column(Integer, primary_key=True)
-    date = Column(DateTime, nullable=False)
-    mean = Column(Float)
-    std = Column(Float)
-    skewness = Column(Float)
-    kurtosis = Column(Float)
-    sharpe_ratio = Column(Float)
-    sortino_ratio = Column(Float)
-    var_95 = Column(Float)
-    cvar_95 = Column(Float)
-    max_drawdown = Column(Float)
-    calmar_ratio = Column(Float)
-    created_at = Column(DateTime, default=datetime.utcnow)
+class VolatilityMetric(Base):
+    __tablename__ = "volatility_metrics"
 
-class VolatilityMetrics(Base):
-    __tablename__ = 'volatility_metrics'
-    
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, nullable=False)
     historical_volatility = Column(Float)
@@ -59,32 +43,32 @@ class VolatilityMetrics(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class MarketRegime(Base):
-    __tablename__ = 'market_regime'
-    
+    __tablename__ = "market_regimes"
+
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, nullable=False)
-    regime = Column(String)
-    z_score = Column(Float)
+    regime = Column(String(50))
+    probability = Column(Float)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-class MonteCarloSimulation(Base):
-    __tablename__ = 'monte_carlo_simulation'
-    
+class MLPrediction(Base):
+    __tablename__ = "ml_predictions"
+
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, nullable=False)
-    simulation_date = Column(DateTime, nullable=False)
-    mean_path = Column(JSON)
-    upper_bound = Column(JSON)
-    lower_bound = Column(JSON)
-    confidence_interval = Column(Float)
+    predicted_price = Column(Float)
+    confidence = Column(Float)
+    model_type = Column(String(50))
     created_at = Column(DateTime, default=datetime.utcnow)
 
-# Database connection
 def get_db_connection():
-    engine = create_engine('sqlite:///tesla_analysis.db')
-    Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-    return Session()
+    engine = create_engine(DATABASE_URL)
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    return SessionLocal()
+
+def init_db():
+    engine = create_engine(DATABASE_URL)
+    Base.metadata.create_all(bind=engine)
 
 # Database operations
 class DatabaseOperations:
@@ -92,22 +76,17 @@ class DatabaseOperations:
         self.session = get_db_connection()
 
     def save_stock_data(self, data: dict):
-        stock_data = StockData(**data)
+        stock_data = StockPrice(**data)
         self.session.add(stock_data)
         self.session.commit()
 
     def save_technical_indicators(self, data: dict):
-        indicators = TechnicalIndicators(**data)
+        indicators = TechnicalIndicator(**data)
         self.session.add(indicators)
         self.session.commit()
 
-    def save_statistical_metrics(self, data: dict):
-        metrics = StatisticalMetrics(**data)
-        self.session.add(metrics)
-        self.session.commit()
-
     def save_volatility_metrics(self, data: dict):
-        metrics = VolatilityMetrics(**data)
+        metrics = VolatilityMetric(**data)
         self.session.add(metrics)
         self.session.commit()
 
@@ -116,9 +95,9 @@ class DatabaseOperations:
         self.session.add(regime)
         self.session.commit()
 
-    def save_monte_carlo_simulation(self, data: dict):
-        simulation = MonteCarloSimulation(**data)
-        self.session.add(simulation)
+    def save_ml_prediction(self, data: dict):
+        prediction = MLPrediction(**data)
+        self.session.add(prediction)
         self.session.commit()
 
     def get_latest_data(self, model_class, limit: int = 100):
