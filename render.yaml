@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: tesla-analysis-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: PORT
+        value: 8000
+      - key: DATABASE_URL
+        value: sqlite:///tesla_stock.db
+      - key: ALPHA_VANTAGE_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false 
