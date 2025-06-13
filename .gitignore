@@ -51,3 +51,4 @@ backend/models/
 *.db
 *.sqlite3
 *.log 
+.vercel
